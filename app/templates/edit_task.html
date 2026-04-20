@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+    <div class="form-header">
+      <h2>✏️ Edit Task</h2>
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}">
+      <div class="form-group">
+        <label for="title">Task Title <span class="required">*</span></label>
+        <input type="text" id="title" name="title" class="form-control"
+               value="{{ task.title }}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" class="form-control"
+                  rows="4">{{ task.description or '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority" class="form-control">
+            {% for p in ['Low', 'Medium', 'High'] %}
+              <option value="{{ p }}" {% if task.priority == p %}selected{% endif %}>
+                {% if p == 'Low' %}🟢{% elif p == 'Medium' %}🟡{% else %}🔴{% endif %} {{ p }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group half">
+          <label for="status">Status</label>
+          <select id="status" name="status" class="form-control">
+            {% for s in ['Pending', 'In Progress', 'Done'] %}
+              <option value="{{ s }}" {% if task.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="due_date">Due Date</label>
+        <input type="date" id="due_date" name="due_date" class="form-control"
+               value="{{ task.due_date or '' }}" />
+      </div>
+
+      <div class="form-meta">
+        <small>📅 Created: {{ task.created_at.strftime('%d %B %Y, %I:%M %p') }}</small>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">💾 Save Changes</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

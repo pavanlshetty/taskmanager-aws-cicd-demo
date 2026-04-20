@@ -1,13 +1,22 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy from'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+        - main
+        - develop
+        - staging
 
 env:
   TF_VERSION: '1.5.0'
   ANSIBLE_VERSION: '2.9'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-and-push:
@@ -15,6 +24,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -41,6 +52,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -64,7 +77,7 @@ jobs:
 
     - name: Terraform Apply
       working-directory: ./terraform
-      run: terraform apply -var="key_name=$KEY_NAME" -auto-approve tfplan
+      run: terraform apply -auto-approve tfplan
 
     - name: Get Terraform outputs
       working-directory: ./terraform

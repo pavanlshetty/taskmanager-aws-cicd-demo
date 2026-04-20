@@ -28,3 +28,11 @@ secrets/
 .DS_Store
 *.db
 tasks.db
+.terraform*
+.tfstate
+.tfstate.*backup
+*.tfvars.json
+.terraformrc
+crash.log
+.terraform.lock.hcl
+.terraform/

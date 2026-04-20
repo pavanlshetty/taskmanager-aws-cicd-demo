@@ -9,13 +9,13 @@ variable "vpc_cidr" {
 }
 
 variable "subnet_cidr" {
-  description = "CIDR block for subnet"
+  description = "CIDR block for subnet A"
   default     = "10.0.1.0/24"
 }
 
-variable "ami_id" {
-  description = "AMI ID for EC2 instance"
-  default     = "ami-0c55b159cbfafe1d0"  # Ubuntu 20.04 LTS in us-east-1
+variable "subnet_cidr_b" {
+  description = "CIDR block for subnet B"
+  default     = "10.0.2.0/24"
 }
 
 variable "instance_type" {

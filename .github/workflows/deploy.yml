@@ -15,7 +15,7 @@ on:
 
 env:
   TF_VERSION: '1.5.0'
-  ANSIBLE_VERSION: '2.9'
+  ANSIBLE_VERSION: '9.0.0'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
@@ -82,7 +82,6 @@ jobs:
     - name: Get Terraform outputs
       working-directory: ./terraform
       run: |
-        echo "ALB_DNS=$(terraform output -raw alb_dns)" >> $GITHUB_ENV
         echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
 
     - name: Setup Ansible

@@ -86,7 +86,7 @@ jobs:
 
     - name: Setup Ansible
       run: |
-        pip install ansible==${{ env.ANSIBLE_VERSION }}
+        pip install ansible>=${{ env.ANSIBLE_VERSION }}
         ansible-galaxy collection install community.docker
 
     - name: Create Ansible inventory

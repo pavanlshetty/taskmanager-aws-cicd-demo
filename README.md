@@ -335,6 +335,28 @@ docker: command not found
 - Implement proper IAM roles instead of access keys
 - Add monitoring and logging
 
+## Destroy Infrastructure Pipeline
+
+This repository now includes a second GitHub Actions workflow named `Destroy Infrastructure` that removes all Terraform-managed AWS resources created by the deploy pipeline.
+
+### How to run it
+1. Go to your repository `Actions` tab in GitHub.
+2. Select the `Destroy Infrastructure` workflow.
+3. Click `Run workflow` and choose the branch to use.
+4. The workflow will:
+   - checkout code
+   - authenticate to AWS using `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+   - initialize Terraform in `./terraform`
+   - run `terraform destroy -auto-approve`
+
+### Required secrets
+Make sure these repository secrets are set:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `KEY_NAME`
+
+> The destroy workflow uses the same Terraform configuration and S3 backend as the deploy workflow, so it will remove the exact infrastructure previously provisioned.
+
 ## Sample Repository Link
 
 https://github.com/yourusername/taskmanager-aws-cicd-demo

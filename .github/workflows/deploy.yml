@@ -16,7 +16,6 @@ on:
 env:
   TF_VERSION: '1.5.0'
   ANSIBLE_VERSION: '2.15'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -91,7 +90,7 @@ jobs:
     - name: Create Ansible inventory
       run: |
         echo "[web]" > ansible/inventory.ini
-        echo "${{ env.EC2_PUBLIC_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/tmp/ssh_key" >> ansible/inventory.ini
+        echo "${{ env.EC2_PUBLIC_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/tmp/ssh_key ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory.ini
 
     - name: Setup SSH key
       run: |

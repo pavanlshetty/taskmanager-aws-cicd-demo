@@ -219,7 +219,7 @@ cat ~/.ssh/taskmanager-app-key.pub
 
 - Go back to EC2 → Key Pairs
 - Confirm `taskmanager-app-key` appears in the list
-- Note: The key pair must be in the same AWS region as your Terraform deployment (default: `ap-south-1`)
+- Note: The key pair must be in the same AWS region as your Terraform deployment (default: `us-east-1`)
 
 #### Step 4.4: Set Up GitHub Secrets
 
@@ -411,7 +411,7 @@ denied: access forbidden
 ```
 Error: creating EC2 Instance: InsufficientInstanceCapacity
 ```
-- Change region in `terraform/variables.tf` (try us-west-2)
+- Change region in `terraform/variables.tf` to `us-east-1` if needed
 - Check AWS limits in EC2 console
 
 **4. SSH Connection Issues**

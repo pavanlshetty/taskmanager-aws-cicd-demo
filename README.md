@@ -26,7 +26,7 @@ The pipeline automates the following flow:
 
 ### AWS Resources Created:
 - VPC with public subnet
-- EC2 instance (Ubuntu)
+- EC2 instance (Amazon Linux 2023) - login as `ec2-user`
 - Application Load Balancer
 - Security groups
 - Target group and listener
@@ -179,15 +179,140 @@ In your GitHub repository:
 
 ### 4. SSH Key Pair Setup
 
+This is critical for the CI/CD pipeline to connect to your EC2 instance. Follow these steps carefully.
+
+#### Step 4.1: Generate SSH Key Pair Locally
+
+1. Open Git Bash or Windows PowerShell
+2. Run the following commands:
+
 ```bash
-# Generate SSH key pair
+# Create .ssh directory if it doesn't exist
+mkdir -p ~/.ssh
+
+# Generate RSA key pair (2048-bit recommended)
 ssh-keygen -t rsa -b 2048 -f ~/.ssh/taskmanager-app-key -N ""
 
-# Import public key to AWS
-# Go to EC2 Console → Key Pairs → Import key pair
-# Name: taskmanager-app-key
-# Paste contents of ~/.ssh/taskmanager-app-key.pub
+# Verify the key was created
+ls -la ~/.ssh/taskmanager-app-key*
 ```
+
+This creates:
+- `~/.ssh/taskmanager-app-key` (private key)
+- `~/.ssh/taskmanager-app-key.pub` (public key)
+
+#### Step 4.2: Import Public Key to AWS EC2
+
+1. Open AWS Console → EC2 → Key Pairs
+2. Click "Import key pair"
+3. Name: `taskmanager-app-key` (must match exactly)
+4. Open the public key file and copy its contents:
+
+```bash
+cat ~/.ssh/taskmanager-app-key.pub
+```
+
+5. Paste the entire public key content (starts with `ssh-rsa`, ends with your username)
+6. Click "Import key pair"
+
+#### Step 4.3: Verify Key Pair in AWS
+
+- Go back to EC2 → Key Pairs
+- Confirm `taskmanager-app-key` appears in the list
+- Note: The key pair must be in the same AWS region as your Terraform deployment (default: `us-east-1`)
+
+#### Step 4.4: Set Up GitHub Secrets
+
+1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+2. Add these secrets:
+
+| Secret Name | Value |
+|-------------|-------|
+| `SSH_PRIVATE_KEY` | Contents of `~/.ssh/taskmanager-app-key` (private key file) |
+| `KEY_NAME` | `taskmanager-app-key` |
+
+**Important:** For `SSH_PRIVATE_KEY`:
+- Open the private key file: `cat ~/.ssh/taskmanager-app-key`
+- Copy the entire content including `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----`
+- Paste exactly into the GitHub secret (no extra spaces or line breaks)
+
+#### Step 4.5: Test SSH Connection Locally (Optional but Recommended)
+
+After Terraform creates the EC2 instance, test the connection:
+
+```bash
+# Get the EC2 public IP from Terraform outputs or AWS Console
+# Replace <EC2_PUBLIC_IP> with actual IP
+
+ssh -i ~/.ssh/taskmanager-app-key -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP>
+
+# If successful, you should see:
+# Warning: Permanently added '<EC2_PUBLIC_IP>' (EC2) to the list of known hosts.
+# [ec2-user@ip-xxx-xx-xx-xxx ~]$
+```
+
+#### Step 4.6: Troubleshooting SSH Issues
+
+**Error: "Load key ... error in libcrypto"**
+- The private key file is corrupted or has wrong format
+- Regenerate the key pair and re-import to AWS
+- Update GitHub secret with new private key content
+
+**Error: "Permission denied (publickey)"**
+- Key pair name mismatch: Ensure EC2 instance uses `taskmanager-app-key`
+- Wrong private key in GitHub secret: Verify the secret contains the exact private key content
+- Region mismatch: Key pair and instance must be in same region
+
+**Error: "Connection refused"**
+- Security group doesn't allow SSH: Ensure port 22 is open from 0.0.0.0/0
+- Instance not running: Check EC2 instance state in AWS Console
+
+**To verify key fingerprints:**
+```bash
+# Local private key fingerprint
+ssh-keygen -lf ~/.ssh/taskmanager-app-key
+
+# Should match the public key fingerprint in AWS Console
+```
+
+**If you need to recreate the key pair:**
+```bash
+# Delete old key pair from AWS Console
+# Delete local keys: rm ~/.ssh/taskmanager-app-key*
+# Repeat steps 4.1-4.4
+# Update Terraform and redeploy
+```
+
+### 4.7 Verify Key Pair, GitHub Secret, and Rebuild EC2 Instance
+
+#### Verify the EC2 instance key pair name
+1. Open AWS Console → EC2 → Instances
+2. Select the instance provisioned by Terraform
+3. In the Description panel, check `Key pair name`
+4. Confirm it exactly matches `taskmanager-app-key`
+
+#### Verify the GitHub secret
+1. Open GitHub repository → Settings → Secrets and variables → Actions
+2. Confirm `KEY_NAME` is `taskmanager-app-key`
+3. Confirm `SSH_PRIVATE_KEY` contains the full private key content from `~/.ssh/taskmanager-app-key`
+
+To verify locally:
+```bash
+ssh-keygen -y -f ~/.ssh/taskmanager-app-key
+```
+If this command prints a public key, the file is valid.
+
+#### Rebuild the instance correctly with Terraform
+If the running EC2 instance is using the wrong key pair, destroy and recreate it:
+
+```bash
+cd terraform
+terraform init
+terraform destroy -auto-approve -var="key_name=taskmanager-app-key"
+terraform apply -auto-approve -var="key_name=taskmanager-app-key"
+```
+
+If you want to preserve state, ensure the same `KEY_NAME` secret is set and the same AWS region is used by both GitHub Actions and Terraform.
 
 ### 5. Docker Hub Setup
 
@@ -286,7 +411,7 @@ denied: access forbidden
 ```
 Error: creating EC2 Instance: InsufficientInstanceCapacity
 ```
-- Change region in `terraform/variables.tf` (try us-west-2)
+- Change region in `terraform/variables.tf` to `us-east-1` if needed
 - Check AWS limits in EC2 console
 
 **4. SSH Connection Issues**
@@ -301,9 +426,9 @@ Failed to connect to the host via ssh
 ```
 docker: command not found
 ```
-- SSH into EC2: `ssh -i ~/.ssh/taskmanager-app-key ubuntu@<ec2-ip>`
+- SSH into EC2: `ssh -i ~/.ssh/taskmanager-app-key ec2-user@<ec2-ip>`
 - Check if Docker installed: `docker --version`
-- Manual fix: `sudo apt update && sudo apt install -y docker.io`
+- Manual fix: `sudo yum update -y && sudo yum install -y docker`
 
 #### Debugging Steps:
 1. Check GitHub Actions detailed logs

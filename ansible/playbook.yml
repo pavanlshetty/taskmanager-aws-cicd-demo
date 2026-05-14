@@ -3,14 +3,27 @@
 - hosts: web
   become: yes
   tasks:
-    - name: Update apt cache
+    - name: Update package cache on Debian/Ubuntu
       apt:
         update_cache: yes
+      when: ansible_os_family == "Debian"
 
-    - name: Install Docker
+    - name: Update package cache on Amazon Linux/RedHat
+      yum:
+        update_cache: yes
+      when: ansible_os_family != "Debian"
+
+    - name: Install Docker on Debian/Ubuntu
       apt:
         name: docker.io
         state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker on Amazon Linux/RedHat
+      yum:
+        name: docker
+        state: present
+      when: ansible_os_family != "Debian"
 
     - name: Start and enable Docker service
       service:
